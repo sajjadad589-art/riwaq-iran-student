@@ -8,7 +8,7 @@ export function normalizePhone(value){
  if(!/^\+[1-9]\d{7,14}$/.test(phone)||phone.startsWith('+964')&&!/^\+9647\d{9}$/.test(phone))throw Error('اكتب رقم موبايل صحيحاً مع رمز الدولة');
  return phone;
 }
-export function checkPassword(password){if(typeof password!=='string'||password.length<12||password.length>128)throw Error('كلمة المرور يجب أن تكون من 12 إلى 128 حرفاً');}
+export function checkPassword(password){if(typeof password!=='string'||password.length<6||password.length>128)throw Error('كلمة المرور يجب أن تكون من 6 إلى 128 حرفاً');}
 const derive=(password,salt)=>new Promise((resolve,reject)=>scrypt(password.normalize('NFKC'),salt,32,{N:32768,r:8,p:3,maxmem:64*1024*1024},(error,key)=>error?reject(error):resolve(key)));
 export async function hashPassword(password){checkPassword(password);const salt=randomBytes(16).toString('hex');return `scrypt1:${salt}:${(await derive(password,salt)).toString('hex')}`;}
 export async function verifyPassword(password,hash){
