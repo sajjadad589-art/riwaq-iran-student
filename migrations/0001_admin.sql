@@ -1,0 +1,16 @@
+CREATE TABLE IF NOT EXISTS app_users (
+ id TEXT PRIMARY KEY, phone TEXT NOT NULL UNIQUE, name TEXT NOT NULL,
+ password_hash TEXT NOT NULL, role TEXT NOT NULL DEFAULT 'user' CHECK(role IN ('user','admin')),
+ phone_verified INTEGER NOT NULL DEFAULT 0 CHECK(phone_verified=0),
+ created_at INTEGER NOT NULL
+);
+CREATE TABLE IF NOT EXISTS app_sessions (
+ token_hash TEXT PRIMARY KEY, user_id TEXT NOT NULL REFERENCES app_users(id) ON DELETE CASCADE,
+ expires_at INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS sessions_expiry ON app_sessions(expires_at);
+CREATE TABLE IF NOT EXISTS auth_attempts (key TEXT PRIMARY KEY, count INTEGER NOT NULL, expires_at INTEGER NOT NULL);
+CREATE TABLE IF NOT EXISTS admin_invites (token_hash TEXT PRIMARY KEY, phone TEXT NOT NULL, expires_at INTEGER NOT NULL, used INTEGER NOT NULL DEFAULT 0);
+CREATE TABLE IF NOT EXISTS cms_state (id INTEGER PRIMARY KEY CHECK(id=1), revision INTEGER NOT NULL, document TEXT NOT NULL, updated_at INTEGER NOT NULL, updated_by TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS cms_history (revision INTEGER PRIMARY KEY, document TEXT NOT NULL, updated_at INTEGER NOT NULL, updated_by TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS app_assets (id TEXT PRIMARY KEY,mime TEXT NOT NULL,data BLOB NOT NULL,created_at INTEGER NOT NULL);

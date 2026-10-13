@@ -1,5 +1,15 @@
 {
   "name": "way4",
   "pages_build_output_dir": "dist",
-  "compatibility_date": "2026-10-13"
+  "compatibility_date": "2026-10-13",
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "wayak-management",
+      "database_id": "7b069a7b-7c97-43d6-809f-089c6ef5c8fb"
+    }
+  ],
+  "compatibility_flags": [
+    "nodejs_compat"
+  ]
 }
