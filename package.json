@@ -1,1 +1,19 @@
-{"name":"iran-student","version":"1.0.0","private":true,"type":"module","scripts":{"dev":"vite --host 127.0.0.1","build":"vite build","test":"node --test tests/*.test.js"},"dependencies":{"leaflet":"1.9.4"},"devDependencies":{"vite":"^7.1.0","@playwright/test":"^1.55.0"}}
+{
+  "name": "iran-student",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "build": "vite build",
+    "test": "node --test tests/*.test.js",
+    "test:browser": "node tests/app-browser.mjs"
+  },
+  "dependencies": {
+    "leaflet": "1.9.4"
+  },
+  "devDependencies": {
+    "vite": "^7.1.0",
+    "@playwright/test": "^1.55.0"
+  }
+}
