@@ -15,8 +15,8 @@ Pages Function في functions/api/market.js يجلب السوقين باستقل
 
 ## النشر
 المستودع: https://github.com/sajjadad589-art/riwaq-iran-student
-مشروع Cloudflare Pages: wayak
-الرابط: https://wayak-3r4.pages.dev
-npm run build ثم npx wrangler pages deploy dist --project-name wayak --branch main. النشر مباشر؛ الربط التلقائي من GitHub غير مهيأ.
+مشروع Cloudflare Pages: way4
+الرابط: https://way4.pages.dev
+npm run build ثم npx wrangler pages deploy dist --project-name way4 --branch main. النشر مباشر؛ الربط التلقائي من GitHub غير مهيأ.
 
 تصميم المرجع وخلفيته المولدة موثقان في DESIGN.md. لا توجد مدفوعات داخل التطبيق، والاستفسار عن التحويل عبر واتساب +9647766334555.
