@@ -10,7 +10,8 @@
     "test:browser": "node tests/app-browser.mjs && node tests/enhancements-browser.mjs",
     "test:management": "node tests/management-browser.mjs",
     "test:presence": "node tests/gate-presence-browser.mjs",
-    "test:notifications": "node tests/notifications-browser.mjs"
+    "test:notifications": "node tests/notifications-browser.mjs",
+    "test:recovery": "node tests/recovery-browser.mjs"
   },
   "dependencies": {
     "leaflet": "1.9.4",
