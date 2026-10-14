@@ -1,4 +1,5 @@
 import './enhancements.css';
+import {marketHealth,marketStamp} from './market-health.js';
 
 const $ = id => document.getElementById(id);
 const number = n => new Intl.NumberFormat('en-US', {maximumFractionDigits: 2}).format(n);
@@ -25,17 +26,22 @@ export function enhanceApp(map, state) {
   document.querySelectorAll('.rate-tile').forEach((tile, i) => {
     const meta = document.createElement('small');meta.id = i ? 'iran-meta' : 'iraq-meta';meta.className = 'market-meta';tile.querySelector('div').append(meta);
   });
+  const notice=document.createElement('p');notice.id='market-notice';notice.className='market-warning';notice.setAttribute('role','status');notice.hidden=true;document.querySelector('.rate-unit').after(notice);
+  const oldOption=document.createElement('label');oldOption.className='historical-choice';oldOption.innerHTML='<input id="allow-old-market" type="checkbox"> استخدام آخر قراءة متاحة للمحول (قديمة أو إغلاق، وليست مباشرة)';document.querySelector('#exchange .exchange-grid').before(oldOption);oldOption.querySelector('input').onchange=()=>$('amount').dispatchEvent(new Event('input'));
   let previous = '';
   function rateDetails() {
     const {data, busy} = state();
-    const key = JSON.stringify([data?.markets, data?.cached, busy, data?.checked, $('iqd-equivalent').textContent]);
+    const health=Object.fromEntries(['IR','IQ'].map(id=>[id,marketHealth(data?.markets?.[id],Date.now(),id,!!data?.cached)]));
+    const key = JSON.stringify([data?.markets, data?.cached, busy, data?.checked, health.IR.state,health.IQ.state,$('iqd-equivalent').textContent]);
     if (key === previous) return;previous = key;
     homeEquivalent.textContent = $('iqd-equivalent').textContent + ' ←';
     for (const [id, market] of [['iran-meta', data?.markets?.IR], ['iraq-meta', data?.markets?.IQ]]) {
-      $(id).textContent = !market ? (busy ? 'جارٍ جلب السعر…' : 'المصدر غير متاح') :
-        (market.updatedAt ? new Date(market.updatedAt).toLocaleTimeString('ar-IQ', {timeZone: 'Asia/Baghdad', hour: '2-digit', minute: '2-digit'}) : market.sourceDate) +
-        ' · ' + (data.cached ? 'محفوظ' : market.stale ? 'قراءة قديمة' : market.closed ? 'آخر إغلاق' : 'وقت المصدر');
+      const country=id==='iran-meta'?'IR':'IQ';$(id).textContent=!market?(busy?'جارٍ جلب السعر…':'المصدر غير متاح'):marketStamp(market,country)+' · '+health[country].label;
+      $(id).classList.toggle('quote-delayed',!health[country].usable);$(id).closest('.rate-tile').classList.toggle('historical-rate',!!market&&!health[country].usable);
     }
+    const delayed=Object.entries(health).filter(([,h])=>!h.usable);notice.hidden=!data||!delayed.length;notice.textContent=delayed.map(([id,h])=>(id==='IR'?'إيران':'العراق')+': '+h.label).join(' · ')+'؛ يعاد الفحص تلقائياً خلال دقيقتين. وقت فحص التطبيق لا يغيّر تاريخ السعر.';
+    oldOption.hidden=!data||!delayed.length;if(oldOption.hidden)oldOption.querySelector('input').checked=false;
+    $('amount').dispatchEvent(new Event('input'));
   }
   rateDetails();setInterval(rateDetails, 1000);
 

@@ -1,7 +1,7 @@
 import {sectionNames,phraseCategories,validateDocument} from './cms-contract.js';
 const $=id=>document.getElementById(id);
 const excluded='#map,#phrase-grid,#rates,#places,#expense-list,#saved-places-list,.live-update,.market-meta,.phrase-tools,.trip-budget,.travel-checklist,.converter-tabs,.quick-amounts,.daily-shortcuts';
-const dynamicIds=new Set(['result','iqd-equivalent','rate-status','market-status','market-rates','home-rate-status','home-equivalent','phrase-count','copy-status','connection','budget-status','install-help','amount-error','expense-total','map-status']);
+const dynamicIds=new Set(['market-notice','result','iqd-equivalent','rate-status','market-status','market-rates','home-rate-status','home-equivalent','phrase-count','copy-status','connection','budget-status','install-help','amount-error','expense-total','map-status']);
 export function createContentManager(){
  const nodes=new Map(),defaults={sections:{},ads:[],phrases:[]};
  for(const [id,title]of Object.entries(sectionNames)){
