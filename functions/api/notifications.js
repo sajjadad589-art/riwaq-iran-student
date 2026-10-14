@@ -34,7 +34,7 @@ export async function onRequest({request,env,data}){
    if(typeof d.id!=='string'||d.id.length>40)throw Error('طلب غير صحيح');
    await throttle(db,'notification-process:'+user.id,100);
    const n=await db.prepare('SELECT * FROM notifications WHERE id=?').bind(d.id).first();if(!n)return json({error:'الإشعار غير موجود'},404);
-   const rows=await db.prepare("SELECT * FROM push_deliveries WHERE notification_id=? AND status='pending' LIMIT 15").bind(n.id).all();
+   const rows=await db.prepare("SELECT * FROM push_deliveries WHERE notification_id=? AND status='pending' LIMIT 8").bind(n.id).all();
    if(rows.results.length&&!env.VAPID_PRIVATE_KEY)return json({error:'إشعارات الجهاز غير مهيأة'},503);
    await Promise.all(rows.results.map(async row=>{
     const claim=await db.prepare("UPDATE push_deliveries SET status='sending',updated_at=? WHERE notification_id=? AND endpoint=? AND status='pending' RETURNING endpoint").bind(now,n.id,row.endpoint).first();if(!claim)return;
