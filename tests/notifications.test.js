@@ -12,9 +12,9 @@ test('subscriptions restrict outbound requests to HTTPS browser push providers a
 });
 test('push encrypts payload for recipient and authenticates with VAPID, uses bounded fetch without redirects',async()=>{
  const {key,auth,subscription:s}=subscription(),keys=webpush.generateVAPIDKeys();
- const code=await deliver({VAPID_PUBLIC_KEY:keys.publicKey,VAPID_PRIVATE_KEY:keys.privateKey},{...subscriptionInput(s)},valid,async(url,options)=>{
+ const code=await deliver({VAPID_PUBLIC_KEY:keys.publicKey,VAPID_PRIVATE_KEY:keys.privateKey},{...subscriptionInput(s),receipt_token:"a".repeat(64)},valid,async(url,options)=>{
   assert.equal(url,s.endpoint);assert.equal(options.redirect,'error');assert.equal(options.headers['Content-Encoding'],'aes128gcm');assert.match(options.headers.Authorization,/^vapid /);
-  const plaintext=ece.decrypt(options.body,{version:'aes128gcm',privateKey:key,authSecret:auth});const payload=JSON.parse(plaintext);assert.equal(payload.title,valid.title);assert.equal(payload.url,'#students');return {status:201};
+  const plaintext=ece.decrypt(options.body,{version:'aes128gcm',privateKey:key,authSecret:auth});const payload=JSON.parse(plaintext);assert.equal(payload.title,valid.title);assert.equal(payload.url,'#students');assert.equal(payload.receipt,'a'.repeat(64));return {status:201};
  });assert.equal(code,201);
 });
 test('service worker displays push and confines notification clicks to the app',async()=>{
@@ -24,4 +24,13 @@ test('service worker displays push and confines notification clicks to the app',
  let work;handlers.push({data:{json:()=>({id:'test',title:'وياك',body:'خبر جديد',url:'#students'})},waitUntil:p=>work=p});await work;assert.equal(shown.body,'خبر جديد');assert.equal(shown.tag,'test');
  handlers.notificationclick({notification:{data:shown.data,close:()=>closed=true},waitUntil:p=>work=p});await work;assert.equal(opened,'https://way4.pages.dev/#students');assert.equal(closed,true);
  handlers.notificationclick({notification:{data:{url:'https://evil.test'},close:()=>{}},waitUntil:p=>work=p});await work;assert.equal(opened,'https://way4.pages.dev/#account');
+});
+
+test('worker acknowledges only after display, retries outstanding receipts and does not acknowledge failed display',async()=>{
+ const handlers={},calls=[],receipt={id:'test',token:'a'.repeat(64)};let fail=false;
+ const self={location:{origin:'https://way4.pages.dev'},addEventListener:(name,fn)=>handlers[name]=fn,registration:{showNotification:async()=>{calls.push('display');if(fail)throw Error('display denied');},getNotifications:async()=>[{data:{receipt}}]}};
+ runInNewContext(readFileSync(new URL('../public/sw.js',import.meta.url),'utf8'),{self,URL,fetch:async(url,options)=>{calls.push('ack');assert.equal(url,'/api/push-receipt');assert.equal(options.credentials,'omit');assert.deepEqual(JSON.parse(options.body),receipt);}});
+ let work;handlers.push({data:{json:()=>({id:receipt.id,receipt:receipt.token})},waitUntil:p=>work=p});await work;assert.deepEqual(calls,['display','ack']);calls.length=0;
+ handlers.message({data:{type:'wayak:flush-receipts'},waitUntil:p=>work=p});await work;assert.deepEqual(calls,['ack']);calls.length=0;fail=true;
+ handlers.push({data:{json:()=>({id:receipt.id,receipt:receipt.token})},waitUntil:p=>work=p});await assert.rejects(work);assert.deepEqual(calls,['display']);
 });

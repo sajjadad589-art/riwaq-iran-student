@@ -1,4 +1,6 @@
 import webpush from 'web-push';
+import {createHmac,createHash} from 'node:crypto';
+export const deliveryReceiptToken=(secret,id,userId,endpoint)=>createHmac('sha256',secret).update(JSON.stringify([id,userId,createHash('sha256').update(endpoint).digest('hex')])).digest('hex');
 export function notificationInput(d){
  const title=typeof d.title==='string'?d.title.trim():'';
  const body=typeof d.body==='string'?d.body.trim():'';
@@ -18,7 +20,7 @@ export function subscriptionInput(d){
  return {endpoint,p256dh,auth};
 }
 export async function deliver(env,row,n,send=fetch){
- const details=webpush.generateRequestDetails({endpoint:row.endpoint,keys:{p256dh:row.p256dh,auth:row.auth}},JSON.stringify({id:n.id,title:n.title,body:n.body,url:n.link}),{TTL:86400,vapidDetails:{subject:'https://way4.pages.dev',publicKey:env.VAPID_PUBLIC_KEY,privateKey:env.VAPID_PRIVATE_KEY}});
+ const details=webpush.generateRequestDetails({endpoint:row.endpoint,keys:{p256dh:row.p256dh,auth:row.auth}},JSON.stringify({id:n.id,title:n.title,body:n.body,url:n.link,...(row.receipt_token?{receipt:row.receipt_token}:{})}),{TTL:86400,vapidDetails:{subject:'https://way4.pages.dev',publicKey:env.VAPID_PUBLIC_KEY,privateKey:env.VAPID_PRIVATE_KEY}});
  const response=await send(details.endpoint,{method:'POST',headers:details.headers,body:details.body,redirect:'error',signal:AbortSignal.timeout(10000)});
  return response.status;
 }
