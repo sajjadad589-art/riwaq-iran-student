@@ -2,13 +2,13 @@ import {chromium} from '@playwright/test';import assert from 'node:assert/strict
 const base=process.env.APP_URL||'http://127.0.0.1:8788';
 const b=await chromium.launch({channel:'msedge',headless:true}),context=await b.newContext({viewport:{width:390,height:844}}),p=await context.newPage();
 const errors=[];p.on('pageerror',e=>errors.push(e.message));
-await p.goto(base+'/#account');await p.getByRole('button',{name:'حساب جديد',exact:true}).click();
+await p.goto(base+'/#account');await p.getByRole('button',{name:'تسجيل حساب جديد',exact:true}).click();
 const unique=String(Date.now()).slice(-7),phone='+964770'+unique,password='Test-registration-2026';
 await p.locator('#account input[name=name]').fill('مستخدم اختبار');await p.locator('#account input[name=phone]').fill(phone);await p.locator('#account input[name=password]').fill(password);await p.locator('#account input[name=confirmation]').fill(password);await p.getByRole('button',{name:'إنشاء حساب',exact:true}).click();await p.waitForURL('**/#home');await p.goto(base+'/#account');await p.getByRole('button',{name:'تسجيل الخروج',exact:true}).waitFor();
 let cookie=await context.cookies();assert.ok(cookie.some(c=>c.name==='wayak_session'&&c.httpOnly));
 assert.equal((await p.request.get(base+'/api/management')).status(),403);
 let r=await p.request.put(base+'/api/content',{headers:{Origin:base,'X-Wayak-Request':'1'},data:{revision:0,document:{}}});assert.equal(r.status(),403);
-await p.getByRole('button',{name:'تسجيل الخروج',exact:true}).click();await p.getByRole('button',{name:'حساب جديد',exact:true}).click();
+await p.getByRole('button',{name:'تسجيل الخروج',exact:true}).click();await p.getByRole('button',{name:'تسجيل حساب جديد',exact:true}).click();
 await p.locator('#account input[name=name]').fill('محاولة تكرار');await p.locator('#account input[name=phone]').fill('0'+phone.slice(4));await p.locator('#account input[name=password]').fill(password);await p.locator('#account input[name=confirmation]').fill(password);await p.getByRole('button',{name:'إنشاء حساب',exact:true}).click();await p.waitForFunction(()=>document.querySelector('#account .form-status').textContent.includes('مسجّل مسبقاً'));
 await p.getByRole('button',{name:'تسجيل الدخول',exact:true}).click();await p.locator('#account input[name=phone]').fill(phone);await p.locator('#account input[name=password]').fill('Wrong-pass-2026');await p.getByRole('button',{name:'دخول',exact:true}).click();await p.waitForFunction(()=>document.querySelector('#account .form-status').textContent.includes('غير صحيحة'));
 await p.locator('#account input[name=password]').fill(password);await p.getByRole('button',{name:'دخول',exact:true}).click();await p.waitForURL('**/#home');await p.goto(base+'/#account');await p.getByRole('button',{name:'تسجيل الخروج',exact:true}).waitFor();await p.reload();await p.getByRole('button',{name:'تسجيل الخروج',exact:true}).waitFor();

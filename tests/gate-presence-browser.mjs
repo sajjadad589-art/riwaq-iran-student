@@ -12,7 +12,7 @@ const userContext=await browser.newContext({viewport:{width:390,height:844}}),p=
 await p.goto(base+'/#home');await p.waitForURL('**/#account');assert.equal(await p.locator('#home').isVisible(),false);assert.equal(await p.getByRole('button',{name:'متابعة دون تسجيل',exact:true}).count(),0);
 await p.goto(base+'/#phrases');await p.waitForURL('**/#account');assert.equal(await p.locator('#phrases').isVisible(),false);
 for(const path of ['/api/content','/api/market','/api/management'])assert.equal((await p.request.get(base+path)).status(),401);
-await p.getByRole('button',{name:'حساب جديد',exact:true}).click();const phone='+964771'+String(Date.now()).slice(-7);
+await p.getByRole('button',{name:'تسجيل حساب جديد',exact:true}).click();const phone='+964771'+String(Date.now()).slice(-7);
 await p.locator('input[name=name]').fill('اختبار حضور');await p.locator('input[name=phone]').fill(phone);await p.locator('input[name=password]').fill('123456');await p.locator('input[name=confirmation]').fill('123456');await p.getByRole('button',{name:'إنشاء حساب',exact:true}).click();await p.waitForURL('**/#home');assert.equal(await p.locator('.bottom-nav').isVisible(),true);
 const firstTab=randomUUID(),secondTab=randomUUID();assert.equal((await post(p.request,'/api/presence',{tabId:firstTab,visible:true})).status(),200);const first=await stats();assert.equal(first.registered,before.registered+1);assert.equal(first.signedIn,before.signedIn+1);assert.ok(first.online>=1);
 assert.equal((await post(p.request,'/api/presence',{tabId:secondTab,visible:true})).status(),200);const second=await stats();assert.equal(first.online,second.online,'two tabs must not count as two people');
