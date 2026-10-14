@@ -20,7 +20,7 @@ export function mountAccounts(manager){
  const shortcut=document.createElement('button');shortcut.className='account-shortcut';shortcut.dataset.screen='account';shortcut.textContent='حسابي';document.querySelector('.app-hero').append(shortcut);
  const more=action('حسابي وتسجيل الدخول',()=>location.hash='account','account-menu');document.querySelector('.more-list').prepend(more);
  function accountView(){
-  account.replaceChildren();const card=document.createElement('article');card.className='card account-card';account.append(card);
+  account.replaceChildren();const card=document.createElement('article');card.className='card account-card';account.append(card);const logo=document.createElement('img');logo.src='/wayak-logo.webp';logo.alt='شعار وياك';logo.className='account-brand';logo.width=80;logo.height=80;card.append(logo);
   if(user){
    const title=document.createElement('h2');title.textContent='أهلاً، '+user.name;card.append(title);const phone=document.createElement('p');phone.textContent=user.phone;phone.dir='ltr';card.append(phone);
    const note=document.createElement('p');note.className='muted';note.textContent='رقم مسجّل بدون تحقق برسالة. قوائمك ومصاريفك الحالية محفوظة على هذا الجهاز.';card.append(note);
