@@ -5,3 +5,4 @@
 
 /* Keep page gestures stable; Leaflet handles its own map gestures. */
 html{touch-action:pan-x pan-y;overscroll-behavior:none;-webkit-text-size-adjust:100%;text-size-adjust:100%}body{overscroll-behavior:none;overflow-x:clip}input,textarea,select{font-size:16px!important}#map{touch-action:none}.screen-bar{padding-top:calc(8px + env(safe-area-inset-top));height:calc(66px + env(safe-area-inset-top))}
+.expense-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}.expense-actions button{flex:1;min-height:46px}.expense-reset{color:#b52236;border-color:#f3bfc8;background:#fff3f5}.expense-archive{margin-top:18px}.expense-archive details{padding:12px 0;border-bottom:1px solid #e4ebf6}.expense-archive summary{cursor:pointer;font-weight:700;line-height:1.8}#expense-save-status{font-size:13px}

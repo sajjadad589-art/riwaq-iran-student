@@ -42,10 +42,7 @@ async function refreshMarket(force=false){
   $('market-rates').textContent=data?'تعذّر التحديث؛ آخر قراءة محفوظة':'أسعار السوق غير متاحة حالياً';$('market-status').textContent='لم يتم استبدال سعر السوق بسعر البنك المركزي. القراءة المحفوظة لا تُستخدم تلقائياً؛ يمكنك اختيارها أو إدخال سعر صرّافك يدوياً.';
  }
 }
-let expenses=[];try{const saved=JSON.parse(localStorage.getItem('wayak-expenses'));if(Array.isArray(saved))expenses=saved.filter(x=>typeof x.name==='string'&&Number.isFinite(x.amount)&&x.amount>0);}catch{}
-function renderExpenses(){$('expense-list').replaceChildren();expenses.forEach((x,i)=>{const row=document.createElement('p');row.textContent=x.name+' — '+fmt(x.amount)+' تومان ';const b=document.createElement('button');b.textContent='حذف';b.setAttribute('aria-label','حذف '+x.name);b.onclick=()=>{expenses.splice(i,1);saveExpenses();};row.append(b);$('expense-list').append(row);});$('expense-total').textContent='المجموع: '+fmt(expenses.reduce((a,x)=>a+x.amount,0))+' تومان';}
-function saveExpenses(){try{localStorage.setItem('wayak-expenses',JSON.stringify(expenses));}catch{}renderExpenses();}
-$('expense-form').onsubmit=e=>{e.preventDefault();const amount=Number($('expense-amount').value),name=$('expense-name').value.trim();if(!name||!Number.isFinite(amount)||amount<=0)return;expenses.push({name,amount});saveExpenses();$('expense-form').reset();};renderExpenses();
+import {mountExpenses} from './expenses-client.js';mountExpenses();
 
 import {mountApp} from './app-shell.js';mountApp(map,refresh,()=>({data,busy,marketAvailable,nextCheckAt}));
 
