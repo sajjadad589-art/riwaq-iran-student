@@ -4,7 +4,7 @@ const base=process.env.APP_URL||'http://127.0.0.1:4173';
 const browser=await chromium.launch({channel:'msedge',headless:true});
 const context=await browser.newContext({viewport:{width:390,height:844},permissions:['geolocation','clipboard-read','clipboard-write'],geolocation:{latitude:35.7,longitude:51.4}});
 const page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
-await page.route('**/api/account/session',r=>r.fulfill({json:{user:{id:'test-user',name:'مستخدم فحص',phone:'+9647700001101',role:'user'}}}));await page.route('**/api/presence',r=>r.fulfill({json:{ok:true}}));
+await page.route('**/api/account/session',r=>r.fulfill({json:{user:{id:'test-user',name:'مستخدم فحص',phone:'+9647700001101',role:'user'}}}));await page.route('**/api/notifications',r=>r.fulfill({json:{messages:[],publicKey:null}}));await page.route('**/api/presence',r=>r.fulfill({json:{ok:true}}));
 const fixture={rates:{USD:1,IRT:250000,IQD:1500},checkedAt:new Date().toISOString(),markets:{IR:{source:'Nerkhsanj',updatedAt:new Date().toISOString()},IQ:{source:'IQWealth',buy:1490,sell:1510,updatedAt:new Date().toISOString()}}};
 await page.route('**/api/market',r=>r.fulfill({json:fixture}));
 await page.goto(base);await page.locator('#home-equivalent').waitFor();

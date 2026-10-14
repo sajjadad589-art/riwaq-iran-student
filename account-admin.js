@@ -1,4 +1,5 @@
 import './management.css';
+import {createNotifications} from './notifications-client.js';
 import {sectionNames,phraseCategories} from './cms-contract.js';
 const $=id=>document.getElementById(id);
 async function api(path,method='GET',data){const response=await fetch(path,{method,credentials:'same-origin',headers:method==='GET'?{}:{'Content-Type':'application/json','X-Wayak-Request':'1'},body:data===undefined?undefined:JSON.stringify(data)});const result=await response.json();if(!response.ok){const error=Error(result.error||'تعذّر الاتصال');error.status=response.status;if(response.status===401&&!path.endsWith('/login'))window.dispatchEvent(new Event('wayak:session-expired'));throw error;}return result;}
@@ -6,6 +7,7 @@ function field(label,value,onchange,type='text'){const wrapper=document.createEl
 const action=(label,handler,className='')=>{const b=document.createElement('button');b.type='button';b.textContent=label;b.className=className;b.onclick=handler;return b;};
 export function mountAccounts(manager){
  let user=null,mode='login',draft,revision=0,bootError='',sessionReady=false;const tabId=crypto.randomUUID();let heartbeatBusy=false;
+ const notifications=createNotifications(api,()=>user);
  document.documentElement.classList.add('auth-locked');
  function enforceGate(){document.documentElement.classList.toggle('auth-locked',!user);if(!sessionReady)return;document.documentElement.classList.remove('auth-pending');if(!user&&!location.hash.startsWith('#account')){history.replaceState(null,'','#account');window.dispatchEvent(new Event('hashchange'));}}
  async function heartbeat(visible=!document.hidden){if(!user||!navigator.onLine||heartbeatBusy&&visible)return;heartbeatBusy=true;try{const response=await fetch('/api/presence',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json','X-Wayak-Request':'1'},body:JSON.stringify({tabId,visible}),keepalive:true});if(response.status===401)expireSession();}catch{}finally{heartbeatBusy=false;if(visible&&document.hidden&&user)heartbeat(false);}}
@@ -24,7 +26,8 @@ export function mountAccounts(manager){
    if(user.role==='admin')card.append(action('فتح لوحة الإدارة',()=>location.hash='admin','primary'));
    const form=document.createElement('form');form.className='account-form';form.innerHTML='<h3>تغيير كلمة المرور</h3><label>كلمة المرور الحالية<input name="currentPassword" type="password" autocomplete="current-password" required></label><label>كلمة مرور جديدة<input name="password" type="password" minlength="6" maxlength="128" autocomplete="new-password" required></label><button class="primary">حفظ كلمة المرور</button><p role="status"></p>';
    form.onsubmit=async e=>{e.preventDefault();const button=form.querySelector('button'),status=form.querySelector('[role=status]');button.disabled=true;try{await api('/api/account/password','POST',Object.fromEntries(new FormData(form)));form.reset();status.textContent='تم تغيير كلمة المرور وتسجيل خروج الجلسات الأخرى.';}catch(error){status.textContent=error.message;}finally{button.disabled=false;}};card.append(form);
-   card.append(action('تسجيل الخروج',async()=>{try{await api('/api/account/logout','POST',{});expireSession();shortcut.textContent='حسابي';}catch(error){alert(error.message);}},'logout-button'));return;
+   notifications.accountControls(card);
+   card.append(action('تسجيل الخروج',async()=>{try{await notifications.disable().catch(()=>{});await api('/api/account/logout','POST',{});expireSession();shortcut.textContent='حسابي';}catch(error){alert(error.message);}},'logout-button'));return;
   }
   const setup=new URLSearchParams(location.hash.split('?')[1]||'').get('setup');const isSetup=!!setup;
   const heading=document.createElement('h2');heading.textContent=isSetup?'تفعيل حساب المدير':mode==='register'?'إنشاء حساب':'أهلاً بيك في وياك';card.append(heading);
@@ -43,10 +46,10 @@ export function mountAccounts(manager){
   if(user?.role!=='admin'){admin.innerHTML='<article class="card"><h2>لوحة إدارة وياك</h2><p>سجّل الدخول بحساب المدير للوصول للإدارة.</p><button class="primary" data-screen="account">تسجيل الدخول</button></article>';return;}
   manager.setEditing(true);
   if(!draft||force){try{const d=await api('/api/content');draft=d.document||structuredClone(manager.defaults);revision=d.revision;}catch(error){admin.textContent=error.message;return;}}
-  admin.innerHTML='<div class="admin-intro"><h2>لوحة إدارة وياك</h2><p>عدّل المحتوى وانشره مباشرة بدون تنزيل تحديث للتطبيق.</p></div><div id="admin-stats" class="admin-stats"></div><div class="admin-controls"><button id="publish-content" class="primary">حفظ ونشر التغييرات</button><button id="reload-content">إعادة تحميل المنشور</button></div><p id="admin-status" role="status"></p><div class="admin-tabs"><button data-panel="sections">الأقسام</button><button data-panel="phrases">العبارات</button><button data-panel="ads">الإعلانات</button><button data-panel="users">المستخدمون والنسخ</button></div><div id="admin-panel"></div>';
+  admin.innerHTML='<div class="admin-intro"><h2>لوحة إدارة وياك</h2><p>عدّل المحتوى وانشره مباشرة بدون تنزيل تحديث للتطبيق.</p></div><div id="admin-stats" class="admin-stats"></div><div class="admin-controls"><button id="publish-content" class="primary">حفظ ونشر التغييرات</button><button id="reload-content">إعادة تحميل المنشور</button></div><p id="admin-status" role="status"></p><div class="admin-tabs"><button data-panel="sections">الأقسام</button><button data-panel="phrases">العبارات</button><button data-panel="ads">الإعلانات</button><button data-panel="users">المستخدمون والنسخ</button><button data-panel="notifications">الإشعارات</button></div><div id="admin-panel"></div>';
   $('publish-content').onclick=async()=>{const button=$('publish-content');button.disabled=true;status('جارٍ النشر…');try{const d=await api('/api/content','PUT',{document:draft,revision});revision=d.revision;draft=d.document;manager.applyPublished(d);status('تم النشر · النسخة '+revision+'. تظهر عند إعادة فتح التطبيق أو خلال دقيقة.');}catch(error){status(error.message);}finally{button.disabled=false;}};
   $('reload-content').onclick=()=>{if(confirm('إلغاء التعديلات غير المنشورة وتحميل النسخة الحالية؟'))adminView(true);};
-  admin.querySelectorAll('[data-panel]').forEach(button=>button.onclick=()=>{admin.querySelectorAll('[data-panel]').forEach(b=>b.setAttribute('aria-pressed',b===button));({sections:sectionsPanel,phrases:phrasesPanel,ads:adsPanel,users:usersPanel})[button.dataset.panel]();});
+  admin.querySelectorAll('[data-panel]').forEach(button=>button.onclick=()=>{admin.querySelectorAll('[data-panel]').forEach(b=>b.setAttribute('aria-pressed',b===button));({sections:sectionsPanel,phrases:phrasesPanel,ads:adsPanel,users:usersPanel,notifications:notifications.adminPanel})[button.dataset.panel]();});
   admin.querySelector('[data-panel=sections]').click();
   refreshStats();
  }
