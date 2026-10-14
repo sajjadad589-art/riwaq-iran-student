@@ -1,3 +1,4 @@
+import './app-gestures.js';
 import {marketHealth,marketStamp,usableMarketRates,savedMarket} from './market-health.js';
 import {extraPhrases} from './phrasebook.js';
 import L from 'leaflet';import 'leaflet/dist/leaflet.css';import './style.css';import {convert} from './currency.js';
