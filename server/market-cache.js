@@ -10,7 +10,7 @@ export async function readMarketSource(spec,{db,force=false,now=Date.now(),send=
  }
  try{
   const url=new URL(spec.url);url.searchParams.set('wayak_minute',String(Math.floor(now/60000)));
-  const response=await send(url.href,{signal:AbortSignal.timeout(10000),headers:{Accept:'application/json','Cache-Control':'no-cache'},cache:'no-store',cf:{cacheTtl:0,cacheEverything:false}});
+  const response=await send(url.href,{signal:AbortSignal.timeout(10000),headers:{Accept:'application/json','Cache-Control':'no-cache'},cache:'no-store'});
   if(!response.ok)throw Error('upstream_http_'+response.status);
   const payload=await response.json(),quote=spec.parse(payload,now);
   if(db)await db.prepare('UPDATE market_source_cache SET payload=?,fetched_at=?,lock_until=0,last_error=NULL WHERE id=? AND lock_token=?').bind(JSON.stringify(payload),now,spec.id,lock).run();
