@@ -1,6 +1,7 @@
 import {chromium} from '@playwright/test';import assert from 'node:assert/strict';
 const base=process.env.APP_URL||'http://127.0.0.1:4173';
 const browser=await chromium.launch({channel:'msedge',headless:true});const context=await browser.newContext({viewport:{width:390,height:844},permissions:['geolocation'],geolocation:{latitude:35.7,longitude:51.4}});const page=await context.newPage();const errors=[];page.on('pageerror',e=>errors.push(e.message));
+await page.route('**/api/account/session',r=>r.fulfill({json:{user:{id:'test-user',name:'مستخدم فحص',phone:'+9647700001101',role:'user'}}}));await page.route('**/api/presence',r=>r.fulfill({json:{ok:true}}));
 const snapshot={rates:{USD:1,IRT:250000,IQD:1500},checkedAt:new Date().toISOString(),markets:{IR:{rate:250000,source:'Nerkhsanj',updatedAt:new Date().toISOString()},IQ:{rate:1500,buy:1490,sell:1510,source:'IQWealth',updatedAt:new Date().toISOString()}}};
 let marketHits=0;await page.route('**/api/market',r=>{marketHits++;return r.fulfill({json:snapshot});});
 await page.clock.install();await page.goto(base);await page.locator('#home').waitFor();assert.equal(await page.locator('main>section:visible').count(),1);await page.waitForFunction(()=>document.querySelector('#home-iqd').textContent.includes('150'));assert.match(await page.locator('#home-rate-status').textContent(),/Nerkhsanj/);
