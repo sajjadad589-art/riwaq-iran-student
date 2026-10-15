@@ -46,6 +46,7 @@ import {mountExpenses} from './expenses-client.js';mountExpenses();
 
 import {mountApp} from './app-shell.js';mountApp(map,refresh,()=>({data,busy,marketAvailable,nextCheckAt}));
 
+import {mountTutor} from './tutor-client.js';mountTutor();
 import {enhanceApp} from './enhancements.js';enhanceApp(map,()=>({data,busy,marketAvailable,nextCheckAt}));
 
 import {createContentManager} from './content-client.js';import {mountAccounts} from './account-admin.js';const contentManager=createContentManager();mountAccounts(contentManager);

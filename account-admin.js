@@ -12,7 +12,7 @@ export function mountAccounts(manager){
  document.documentElement.classList.add('auth-locked');
  function enforceGate(){document.documentElement.classList.toggle('auth-locked',!user);if(!sessionReady)return;document.documentElement.classList.remove('auth-pending');if(!user&&!location.hash.startsWith('#account')){history.replaceState(null,'','#account');window.dispatchEvent(new Event('hashchange'));}}
  async function heartbeat(visible=!document.hidden){if(!user||!navigator.onLine||heartbeatBusy&&visible)return;heartbeatBusy=true;try{const response=await fetch('/api/presence',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json','X-Wayak-Request':'1'},body:JSON.stringify({tabId,visible}),keepalive:true});if(response.status===401)expireSession();}catch{}finally{heartbeatBusy=false;if(visible&&document.hidden&&user)heartbeat(false);}}
- function expireSession(){sessionReady=true;user=null;mode='login';draft=null;manager.setEditing(false);enforceGate();accountView();}
+ function expireSession(){window.dispatchEvent(new Event('wayak:data-clear'));sessionReady=true;user=null;mode='login';draft=null;manager.setEditing(false);enforceGate();accountView();}
  function signedIn(value,redirect=false){sessionReady=true;user=value;bootError='';enforceGate();accountView();if(user){window.dispatchEvent(new CustomEvent('wayak:authenticated',{detail:{user}}));manager.load();heartbeat().then(refreshStats);if(redirect)location.hash=user.role==='admin'?'admin':'home';}}
  window.addEventListener('wayak:session-expired',expireSession);setInterval(()=>{if(!document.hidden)heartbeat();},30000);document.addEventListener('visibilitychange',()=>heartbeat(!document.hidden));window.addEventListener('pagehide',()=>heartbeat(false));window.addEventListener('online',()=>{if(user)heartbeat();});
  const account=document.createElement('section');account.id='account';account.hidden=true;document.querySelector('main').append(account);
@@ -26,7 +26,7 @@ export function mountAccounts(manager){
   account.replaceChildren();const card=document.createElement('article');card.className='card account-card';account.append(card);const logo=document.createElement('img');logo.src='/wayak-logo.webp';logo.alt='شعار وياك';logo.className='account-brand';logo.width=80;logo.height=80;card.append(logo);
   if(user){
    const title=document.createElement('h2');title.textContent='أهلاً، '+user.name;card.append(title);const phone=document.createElement('p');phone.textContent=user.phone;phone.dir='ltr';card.append(phone);
-   const note=document.createElement('p');note.className='muted';note.textContent='رقم مسجّل بدون تحقق برسالة. قوائمك ومصاريفك الحالية محفوظة على هذا الجهاز.';card.append(note);
+   const note=document.createElement('p');note.className='muted';note.textContent='رقم مسجّل بدون تحقق برسالة. مصاريفك وقوائمك محفوظة بحسابك وتتزامن بين أجهزتك.';card.append(note);
    if(user.role==='admin')card.append(action('فتح لوحة الإدارة',()=>location.hash='admin','primary'));
    card.append(action('الإعدادات والإشعارات',()=>location.hash='settings'));
    const form=document.createElement('form');form.className='account-form';form.innerHTML='<h3>تغيير كلمة المرور</h3><label>كلمة المرور الحالية<input name="currentPassword" type="password" autocomplete="current-password" required></label><label>كلمة مرور جديدة<input name="password" type="password" minlength="6" maxlength="128" autocomplete="new-password" required></label><button class="primary">حفظ كلمة المرور</button><p role="status"></p>';

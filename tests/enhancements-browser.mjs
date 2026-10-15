@@ -1,10 +1,11 @@
+import {mockAccountData} from './mock-account-data.mjs';
 import {chromium} from '@playwright/test';
 import assert from 'node:assert/strict';
 const base=process.env.APP_URL||'http://127.0.0.1:4173';
 const browser=await chromium.launch({channel:'msedge',headless:true});
 const context=await browser.newContext({viewport:{width:390,height:844},permissions:['geolocation','clipboard-read','clipboard-write'],geolocation:{latitude:35.7,longitude:51.4}});
 const page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
-await page.route('**/api/account/session',r=>r.fulfill({json:{user:{id:'test-user',name:'مستخدم فحص',phone:'+9647700001101',role:'user'}}}));await page.route('**/api/notifications',r=>r.fulfill({json:{messages:[],publicKey:null}}));await page.route('**/api/presence',r=>r.fulfill({json:{ok:true}}));
+await mockAccountData(page);await page.route('**/api/account/session',r=>r.fulfill({json:{user:{id:'test-user',name:'مستخدم فحص',phone:'+9647700001101',role:'user'}}}));await page.route('**/api/notifications',r=>r.fulfill({json:{messages:[],publicKey:null}}));await page.route('**/api/presence',r=>r.fulfill({json:{ok:true}}));
 const fixture={rates:{USD:1,IRT:250000,IQD:1500},checkedAt:new Date().toISOString(),markets:{IR:{source:'Nerkhsanj',updatedAt:new Date().toISOString()},IQ:{source:'IQWealth',buy:1490,sell:1510,updatedAt:new Date().toISOString()}}};
 await page.route('**/api/market',r=>r.fulfill({json:fixture}));
 await page.goto(base);await page.locator('#home-equivalent').waitFor();
@@ -19,14 +20,14 @@ await page.locator('.bottom-nav [data-screen="phrases"]').click();await page.loc
 for(const category of ['street','restaurant','cafe','vegetables','fruit']){await page.locator('[data-filter="'+category+'"]').click();assert.equal(await page.locator('.phrase:visible').count(),30);}
 await page.locator('[data-filter="vegetables"]').click();await page.locator('#phrase-search').fill('گوجه فرنگي');assert.equal(await page.locator('.phrase:visible').count(),2);await page.locator('#phrase-search').fill('');await page.locator('[data-filter="cafe"]').click();await page.locator('#phrase-search').fill('بدون سكر');await page.locator('.phrase:visible').click();assert.equal(await page.evaluate(()=>navigator.clipboard.readText()),'لطفاً بدون شکر');await page.locator('#phrase-search').fill('');await page.locator('[data-filter="all"]').click();
 await page.locator('.bottom-nav [data-screen="services"]').click();await page.locator('#services [data-screen="students"]').click();
-await page.locator('#checklist-items input').first().check();assert.equal(await page.locator('#checklist-progress').textContent(),'1 / 6');
+await page.locator('#checklist-items input').first().check();await page.waitForFunction(()=>document.querySelector('#checklist-progress').textContent==='1 / 6');
 await page.locator('#screen-back').click();await page.locator('#services').waitFor();
-await page.locator('#services [data-screen="expenses"]').click();await page.locator('#trip-budget').fill('200000');
+await page.locator('#services [data-screen="expenses"]').click();await page.locator('#trip-budget').fill('200000');await page.getByRole('button',{name:'حفظ الميزانية بحسابي',exact:true}).click();
 await page.locator('#expense-name').fill('السكن');await page.locator('#expense-amount').fill('300000');await page.locator('#expense-form button').click();
 await page.waitForFunction(()=>document.querySelector('#budget-status').textContent.includes('100,000'));assert.equal(await page.locator('.trip-budget').evaluate(el=>el.classList.contains('over-budget')),true);
 await page.locator('.bottom-nav [data-screen="explore"]').click();await page.locator('#map-city').selectOption('36.2605,59.6168');assert.match(await page.locator('#map-status').textContent(),/مشهد/);
 await page.route('https://nominatim.openstreetmap.org/**',r=>r.fulfill({json:[{lat:'36.26',lon:'59.61',display_name:'سوق مشهد'}]}));
-await page.locator('#query').fill('مشهد');await page.locator('#search-form button').click();await page.getByRole('button',{name:'☆ حفظ المكان',exact:true}).click();assert.equal(await page.locator('#saved-count').textContent(),'1');
+await page.locator('#query').fill('مشهد');await page.locator('#search-form button').click();await page.getByRole('button',{name:'☆ حفظ المكان',exact:true}).click();await page.waitForFunction(()=>document.querySelector('#saved-count').textContent==='1');
 assert.match(await page.getByRole('link',{name:'الاتجاهات'}).getAttribute('href'),/destination=36.26%2C59.61/);
 await page.reload();await page.locator('.saved-places summary').click();await page.getByRole('button',{name:'سوق مشهد',exact:true}).waitFor();
 await page.locator('.bottom-nav [data-screen="services"]').click();await page.locator('#services [data-screen="students"]').click();assert.equal(await page.locator('#checklist-items input').first().isChecked(),true);

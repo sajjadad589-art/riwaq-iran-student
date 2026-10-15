@@ -1,0 +1,2 @@
+import {emptyData,changeData} from '../server/user-data.js';
+export async function mockAccountData(page){const fixture={document:emptyData(),revision:0,fail:false};await page.route('**/api/user-data',async r=>{if(fixture.fail)return r.abort();if(r.request().method()==='POST'){fixture.document=changeData(fixture.document,r.request().postDataJSON());fixture.revision++;}return r.fulfill({json:{revision:fixture.revision,document:fixture.document}});});await page.route('**/api/tutor',r=>r.fulfill({json:{enabled:false,turns:[],note:'غير مفعّل في الفحص'}}));return fixture;}
